@@ -17,12 +17,11 @@ def filter_datum(fields: List[str], redaction: str, message: str,
     """
     Filters message by replacing each value in fields with redaction
     """
-    pattern = r'|'.join(
-        f'({field})={re.escape(separator)}?' for field in fields)
-    return re.sub(
-        pattern,
-        lambda m: m.group(1) + '=' + redaction + separator, message)
-
+    for field in fields:
+        message = re.sub(field + "=.*?" + separator,
+                         field + "=" + redaction + separator,
+                         message)
+    return message
 
 class RedactingFormatter(logging.Formatter):
     """ Redacting Formatter class
