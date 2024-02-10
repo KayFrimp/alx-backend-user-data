@@ -23,6 +23,7 @@ def filter_datum(fields: List[str], redaction: str, message: str,
                          message)
     return message
 
+
 class RedactingFormatter(logging.Formatter):
     """ Redacting Formatter class
     """
