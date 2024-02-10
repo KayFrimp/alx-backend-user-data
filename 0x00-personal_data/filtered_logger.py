@@ -4,12 +4,12 @@ Defines a logger with custom log formatter
 """
 import re
 import logging
-from typing import List, Tuple
+from typing import List
 import mysql.connector
 from os import getenv
 
 
-PII_FIELDS: Tuple[str] = ('name', 'email', 'phone', 'ssn', 'password')
+PII_FIELDS = ('name', 'email', 'phone', 'ssn', 'password')
 
 
 def filter_datum(fields: List[str], redaction: str, message: str,
@@ -58,10 +58,10 @@ def get_logger() -> logging.Logger:
 def get_db() -> mysql.connector.connection.MySQLConnection:
     """Connects to a mysql database"""
     connector = mysql.connector.connection.MySQLConnection(
-        host=getenv('PERSONAL_DATA_DB_HOST', 'localhost'),
-        database=getenv('PERSONAL_DATA_DB_NAME'),
         user=getenv('PERSONAL_DATA_DB_USERNAME', 'root'),
-        password=getenv('PERSONAL_DATA_DB_PASSWORD')
+        password=getenv('PERSONAL_DATA_DB_PASSWORD', ''),
+        host=getenv('PERSONAL_DATA_DB_HOST', 'localhost'),
+        database=getenv('PERSONAL_DATA_DB_NAME')
     )
     return connector
 
@@ -69,11 +69,11 @@ def get_db() -> mysql.connector.connection.MySQLConnection:
 def main() -> None:
     """Log database users"""
     db = get_db()
-    logger = get_logger()
     cursor = db.cursor()
     cursor.execute("SELECT * FROM users")
-
     fields = [i[0] for i in cursor.description]
+    logger = get_logger()
+
     for row in cursor:
         str_row = ''.join(f'{f}={str(r)}; ' for r, f in zip(row, fields))
         logger.info(str_row.strip())
