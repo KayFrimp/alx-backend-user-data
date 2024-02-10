@@ -72,14 +72,11 @@ def main() -> None:
     logger = get_logger()
     cursor = db.cursor()
     cursor.execute("SELECT * FROM users")
-    rows = cursor.fetchall()
-    for row in rows:
-        msg = (
-            "name={}; email={}; phone={}; ssn={}; "
-            "password={}; ip={}; last_login={}; user_agent={};"
-        ).format(
-            row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
-        logger.info(msg)
+
+    fields = [i[0] for i in cursor.description]
+    for row in cursor:
+        str_row = ''.join(f'{f}={str(r)}; ' for r, f in zip(row, fields))
+        logger.info(str_row.strip())
     cursor.close()
     db.close()
 
