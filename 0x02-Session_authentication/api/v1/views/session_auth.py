@@ -3,7 +3,7 @@
 
 from os import getenv
 from typing import Tuple
-from flask import jsonify, request
+from flask import abort, jsonify, request
 from api.v1.views import app_views
 from models.user import User
 
@@ -33,3 +33,17 @@ def login() -> Tuple[str, int]:
         user.set_cookie(getenv("SESSION_NAME"), session_id)
         return user
     return jsonify({"error": "wrong password"}), 401
+
+
+@app_views.route('/auth_session/logout', methods=['DELETE'],
+                 strict_slashes=False)
+def logout() -> Tuple[str, int]:
+    """DELETE /api/v1/auth_session/logout
+    Return:
+      - An empty JSON object.
+    """
+    from api.v1.app import auth
+    is_destroyed = auth.destroy_session(request)
+    if not is_destroyed:
+        abort(404)
+    return jsonify({}), 200
