@@ -43,34 +43,30 @@ class DB:
     def find_user_by(self, **kwargs) -> User:
         """Finds user by an arbitrary keyword
         """
-        fields, values = [], []
-        for key, value in kwargs.items():
-            if hasattr(User, key):
-                fields.append(getattr(User, key))
-                values.append(value)
-            else:
-                raise InvalidRequestError()
-        result = self._session.query(User).filter(
-            tuple_(*fields).in_([tuple(values)])
-        ).first()
-        if result is None:
-            raise NoResultFound()
-        return 
+        if not kwargs:
+            raise InvalidRequestError
+
+        column_names = User.__table__.columns.keys()
+        for key in kwargs.keys():
+            if key not in column_names:
+                raise InvalidRequestError
+
+        user = self._session.query(User).filter_by(**kwargs).first()
+        if user is None:
+            raise NoResultFound
+        return user
 
     def update_user(self, user_id: int, **kwargs) -> None:
         """Updates a user based on a given id.
         """
         user = self.find_user_by(id=user_id)
-        if user is None:
-            return
-        update_source = {}
+
+        column_names = User.__table__.columns.keys()
+        for key in kwargs.keys():
+            if key not in column_names:
+                raise ValueError
+
         for key, value in kwargs.items():
-            if hasattr(User, key):
-                update_source[getattr(User, key)] = value
-            else:
-                raise ValueError()
-        self._session.query(User).filter(User.id == user_id).update(
-            update_source,
-            synchronize_session=False,
-        )
+            setattr(user, key, value)
+
         self._session.commit()
